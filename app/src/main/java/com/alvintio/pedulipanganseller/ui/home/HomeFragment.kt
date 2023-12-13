@@ -100,7 +100,7 @@ class HomeFragment : Fragment() {
             val userId = currentUser.uid
 
             try {
-                val userDocRef = FirebaseFirestore.getInstance().collection("users").document(userId)
+                val userDocRef = FirebaseFirestore.getInstance().collection("users_seller").document(userId)
                 val userSnapshot = userDocRef.get().await()
 
                 if (userSnapshot.exists()) {

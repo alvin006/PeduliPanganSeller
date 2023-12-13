@@ -25,7 +25,7 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun getUserData(uid: String) {
-        val userRef: DocumentReference = firestore.collection("users").document(uid)
+        val userRef: DocumentReference = firestore.collection("users_seller").document(uid)
 
         userDataListener?.remove()
 

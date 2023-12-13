@@ -40,7 +40,7 @@ class AuthenticationViewModel : ViewModel() {
                 val user = User(name, email, authResult.user?.uid ?: "")
                 _userInfo.postValue(user)
 
-                firestore.collection("users")
+                firestore.collection("users_seller")
                     .document(authResult.user?.uid ?: "")
                     .set(user)
                     .await()

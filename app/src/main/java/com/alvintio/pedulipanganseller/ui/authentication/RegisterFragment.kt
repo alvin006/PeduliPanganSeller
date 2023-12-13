@@ -134,7 +134,7 @@ class RegisterFragment : Fragment() {
 
     private fun saveUserDataToFirestore(userId: String, name: String, email: String) {
         val db = Firebase.firestore
-        val usersCollection = db.collection("users")
+        val usersCollection = db.collection("users_seller")
 
         val user = User(name, email, userId)
 
