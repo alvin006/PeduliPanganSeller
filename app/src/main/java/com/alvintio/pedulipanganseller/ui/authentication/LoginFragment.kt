@@ -86,6 +86,8 @@ class LoginFragment : Fragment() {
             }
             else {
                 viewModel.login(email, password)
+                loadingProgressBar.pauseAnimation()
+                loadingProgressBar.visibility = View.GONE
             }
         }
 
