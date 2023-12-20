@@ -2,6 +2,7 @@ package com.alvintio.pedulipanganseller.ui
 
 import android.Manifest
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -13,10 +14,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.alvintio.pedulipanganseller.MainActivity
@@ -39,14 +42,18 @@ class AddProductActivity : AppCompatActivity() {
     companion object {
         private val REQUIRED_CAMERA_PERMISS = arrayOf(Manifest.permission.CAMERA)
         private const val REQUEST_CODE_PERMISS = 101
+        private const val REQUEST_STORAGE_PERMISSION = 101
     }
 
     private lateinit var binding: ActivityAddProductBinding
 
     private var pathImg: String = ""
-
     private var selectedDate: String = ""
-
+    private var productName: String = ""
+    private var productPrice: String = ""
+    private var productDescription: String = ""
+    private var latitude: String = ""
+    private var longitude: String = ""
 
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
@@ -66,10 +73,66 @@ class AddProductActivity : AppCompatActivity() {
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
             val selectedImageUri: Uri? = it.data?.data
-            selectedImageUri?.let {
-                binding.ivProductImage.setImageURI(it)
+            selectedImageUri?.let { uri ->
+                val imagePath = uri.getPath(this)
+
+                binding.ivProductImage.setImageURI(uri)
+
+                if (!imagePath.isNullOrEmpty()) {
+                    pathImg = imagePath
+                } else {
+                    showToast("Gagal mendapatkan path file gambar")
+                }
             }
         }
+    }
+
+    private fun requestStoragePermission() {
+        val readPermission = android.Manifest.permission.READ_EXTERNAL_STORAGE
+        val writePermission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+
+        val readPermissionGranted = ContextCompat.checkSelfPermission(this, readPermission) == PackageManager.PERMISSION_GRANTED
+        val writePermissionGranted = ContextCompat.checkSelfPermission(this, writePermission) == PackageManager.PERMISSION_GRANTED
+
+        val permissions = mutableListOf<String>()
+
+        if (!readPermissionGranted) {
+            permissions.add(readPermission)
+        }
+
+        if (!writePermissionGranted) {
+            permissions.add(writePermission)
+        }
+
+        if (permissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_STORAGE_PERMISSION)
+        } else {
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                 uploadProduct(productName, productPrice, productDescription, pathImg, selectedDate, latitude.toDouble(), longitude.toDouble())
+            } else {
+                Toast.makeText(this, "Izin akses penyimpanan dibutuhkan", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun Uri.getPath(context: Context): String? {
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val cursor = context.contentResolver.query(this, projection, null, null, null)
+        val columnIndex = cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+        cursor?.moveToFirst()
+        val path = cursor?.getString(columnIndex ?: -1)
+        cursor?.close()
+        return path
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -128,6 +191,7 @@ class AddProductActivity : AppCompatActivity() {
                 if (productName.isEmpty() || productPrice.isEmpty() || productDescription.isEmpty() || latitude.isEmpty() || longitude.isEmpty()) {
                     showToast(getString(R.string.required_fields))
                 } else {
+                    requestStoragePermission()
                     uploadProduct(productName, productPrice, productDescription, pathImg, selectedDate, latitude.toDouble(), longitude.toDouble())
                 }
             }
@@ -173,6 +237,7 @@ class AddProductActivity : AppCompatActivity() {
 
             override fun onFailure(call: retrofit2.Call<Product>, t: Throwable) {
                 showToast(getString(R.string.failed_upload))
+                Log.e("AddProductActivity", "Gagal mengunggah produk", t)
             }
         })
     }
@@ -246,4 +311,5 @@ class AddProductActivity : AppCompatActivity() {
         )
         datePicker.show()
     }
+
 }

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
@@ -57,10 +58,18 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         profileViewModel.userData.observe(viewLifecycleOwner) { userData ->
-            binding.tvUserName.text = userData.name
-            binding.tvUserEmail.text = userData.email
-            restaurantViewModel.restaurantName = userData.name
+            if (userData != null) {
+                binding.tvUserName.text = userData.name
+                binding.tvUserEmail.text = userData.email
+                restaurantViewModel.restaurantName = userData.name
+            } else {
+                handleNullUserData()
+            }
         }
+    }
+
+    private fun handleNullUserData() {
+        Toast.makeText(requireContext(), "Data pengguna tidak ditemukan!", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

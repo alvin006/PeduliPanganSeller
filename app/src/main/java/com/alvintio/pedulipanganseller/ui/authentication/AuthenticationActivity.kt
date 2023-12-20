@@ -26,10 +26,6 @@ class AuthenticationActivity : AppCompatActivity() {
         Helper.setupFullScreen(this)
     }
 
-    fun routeToMainActivity() {
-        startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-    }
-
     override fun onBackPressed() {
         super.onBackPressed()
         finishAffinity()
